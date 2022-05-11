@@ -10,78 +10,8 @@ int main() {
 		return 1;
 	}
 
-	// Monitors
-	OpenThen(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Enum\\DISPLAY", {
-		ForEachSubkey(key, {
-			OpenThen(key, name, {
-				ForEachSubkey(key, {
-					OpenThen(key, name, {
-						ForEachSubkey(key, {
-							if (_wcsicmp(name, L"device parameters") == 0) {
-								SpoofBinary(key, name, L"EDID");
-								break;
-							}
-						});
-					});
-				});
-			});
-		});
-	});
-
-	/*
-	OpenThen(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Video", {
-		ForEachSubkey(key, {
-			HKEY parent = key;
-			WCHAR spoof[MAX_PATH] = { 0 };
-
-			OpenThen(HKEY_LOCAL_MACHINE, L"HARDWARE\\DEVICEMAP\\VIDEO", {
-				DWORD count = 0;
-				DWORD size = sizeof(count);
-				if (GetKeyValue(key, L"MaxObjectNumber", (LPBYTE)&count, &size)) {
-					WCHAR video[MAX_PATH] = { 0 };
-					WCHAR path[MAX_PATH] = { 0 };
-
-					for (DWORD i = 0; i < count; ++i) {
-						size = sizeof(path);
-						wsprintf(video, L"\\Device\\Video%d", i);
-						if (GetKeyValue(key, video, (LPBYTE)path, &size)) {
-							LPWSTR replace = StrStrIW(path, name);
-							if (replace) {
-								if (!spoof[0]) {
-									wcscpy(spoof, name);
-									OutSpoofUnique(spoof);
-									RenameSubkey(parent, name, spoof);
-								}
-
-								memcpy(replace, spoof, wcslen(spoof) * 2);
-								RegSetValueEx(key, video, 0, REG_SZ, (PBYTE)path, size);
-							}
-						}
-					}
-				}
-			});
-		});
-	});
-	*/
-
-	// SMBIOS
-	DeleteValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\mssmbios\\Data", L"SMBiosData");
-
-	// Motherboard
-	SpoofUniqueThen(HKEY_LOCAL_MACHINE, L"SYSTEM\\HardwareConfig", L"LastConfig", {
-		ForEachSubkey(key, {
-			if (_wcsicmp(name, L"current")) {
-				RenameSubkey(key, name, spoof);
-				break;
-			}
-		});
-	});
-
-	// NVIDIA
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\NVIDIA Corporation\\Global", L"ClientUUID");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\NVIDIA Corporation\\Global", L"PersistenceIdentifier");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\NVIDIA Corporation\\Global\\CoProcManager", L"ChipsetMatchID");
-
+	/
+	
 	// Misc
 	DeleteKey(HKEY_LOCAL_MACHINE, L"SYSTEM\\MountedDevices");
 	DeleteKey(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Dfrg\\Statistics");
@@ -100,85 +30,8 @@ int main() {
 		});
 	});
 
-	OpenThen(HKEY_LOCAL_MACHINE, L"HARDWARE\\DEVICEMAP\\Scsi", {
-		ForEachSubkey(key, {
-			OpenThen(key, name, {
-				ForEachSubkey(key, {
-					OpenThen(key, name, {
-						ForEachSubkey(key, {
-							if (wcsstr(name, L"arget")) {
-								OpenThen(key, name, {
-									ForEachSubkey(key, {
-										SpoofUnique(key, name, L"Identifier");
-									});
-								});
-							}
-						});
-					});
-				});
-			});
-		});
-	});
-
-	SpoofBinary(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\TPM\\ODUID", L"RandomSeed");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Cryptography", L"MachineGuid");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\IDConfigDB\\Hardware Profiles\\0001", L"HwProfileGuid");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate", L"AccountDomainSid");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate", L"PingID");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate", L"SusClientId");
-	SpoofBinary(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate", L"SusClientIdValidation");
-	SpoofBinary(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters", L"Dhcpv6DUID");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation", L"ComputerHardwareId");
-	SpoofUniques(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation", L"ComputerHardwareIds");
-	SpoofBinary(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Internet Explorer\\Migration", L"IE Installed Date");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\SQMClient", L"MachineId");
-	SpoofQWORD(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\SQMClient", L"WinSqmFirstSessionStartTime");
-	SpoofQWORD(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"InstallTime");
-	SpoofQWORD(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"InstallDate");
-	SpoofBinary(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"DigitalProductId");
-	SpoofBinary(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"DigitalProductId4");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"BuildGUID");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"ProductId");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"BuildLab");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"BuildLabEx");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000", L"_DriverProviderInfo");
-	SpoofUnique(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000", L"UserModeDriverGUID");
-
-	OpenThen(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}", {
-		ForEachSubkey(key, {
-			if (_wcsicmp(name, L"configuration") && _wcsicmp(name, L"properties")) {
-				DeleteValue(key, name, L"NetworkAddress");
-				SpoofQWORD(key, name, L"NetworkInterfaceInstallTimestamp");
-			}
-		});
-	});
-
-	DeleteKey(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Diagnostics\\DiagTrack\\SettingsRequests");
-	SpoofQWORD(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Diagnostics\\DiagTrack\\SevilleEventlogManager", L"LastEventlogWrittenTime");
-	SpoofQWORD(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform\\Activation", L"ProductActivationTime");
-	DeleteValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform", L"BackupProductKeyDefault");
-	DeleteValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform", L"actionlist");
-	DeleteValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform", L"ServiceSessionId");
-	DeleteKey(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist");
-	DeleteKey(HKEY_CURRENT_USER, L"Software\\Hex-Rays\\IDA\\History");
-	DeleteKey(HKEY_CURRENT_USER, L"Software\\Hex-Rays\\IDA\\History64");
-
-	OpenThen(HKEY_LOCAL_MACHINE, L"HARDWARE\\UEFI\\ESRT", {
-		WCHAR subkeys[0xFF][MAX_PATH] = { 0 };
-		DWORD subkeys_length = 0;
-
-		ForEachSubkey(key, {
-			wcscpy(subkeys[subkeys_length++], name);
-		});
-
-		for (DWORD i = 0; i < subkeys_length; ++i) {
-			WCHAR spoof[MAX_PATH] = { 0 };
-			wcscpy(spoof, subkeys[i]);
-			OutSpoofUnique(spoof);
-			RenameSubkey(key, subkeys[i], spoof);
-		}
-	});
-
+	
+	
 	// Equ8 Clear
 	DeleteKey(HKEY_CURRENT_USER, L"SOFTWARE\\Landfall Games");
 	system("rd /s /q C:\\ProgramData\\EQU8");
@@ -202,9 +55,7 @@ int main() {
 	wsprintf(path, L"%ws\\D3DSCache", localappdata);
 	ForceDeleteFile(path);
 
-	wsprintf(path, L"%ws\\NVIDIA Corporation\\GfeSDK", localappdata);
-	ForceDeleteFile(path);
-
+	
 	wsprintf(path, L"%ws\\Microsoft\\Feeds", localappdata);
 	ForceDeleteFile(path);
 
@@ -217,11 +68,6 @@ int main() {
 	wsprintf(path, L"%ws\\Microsoft\\Windows\\INetCookies", localappdata);
 	ForceDeleteFile(path);
 
-	wsprintf(path, L"%ws\\Microsoft\\Windows\\WebCache", localappdata);
-	ForceDeleteFile(path);
-
-	wsprintf(path, L"%ws\\Microsoft\\XboxLive\\AuthStateCache.dat", localappdata);
-	ForceDeleteFile(path);
 
 	for (DWORD drives = GetLogicalDrives(), drive = L'C', index = 0; drives; drives >>= 1, ++index) {
 		if (drives & 1) {
